@@ -20,7 +20,7 @@ use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\CatalogSourceName;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
-use FluffyDiscord\Honkers\Text\HtmlToText;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ProductInterface;
@@ -28,6 +28,7 @@ use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Sylius\Component\Taxonomy\Model\TaxonInterface;
 use Sylius\Component\Taxonomy\Repository\TaxonRepositoryInterface;
 use Sylius\Resource\Model\TimestampableInterface;
+use Twig\Error\Error as TwigError;
 
 class CategoriesDataSource implements ChatbotDataSourceInterface
 {
@@ -38,7 +39,7 @@ class CategoriesDataSource implements ChatbotDataSourceInterface
         private readonly ChannelResolver              $channelResolver,
         private readonly ChannelTaxonRootsInterface   $channelTaxonRoots,
         private readonly CursorCodec                  $cursorCodec,
-        private readonly HtmlToText                   $htmlToText,
+        private readonly RichTextToText               $richTextToText,
         private readonly ChannelUrlGenerator          $channelUrlGenerator,
         private readonly LoggerInterface              $logger,
     ) {
@@ -97,7 +98,7 @@ class CategoriesDataSource implements ChatbotDataSourceInterface
             $productCount = $productCounts[(string) $taxon->getCode()] ?? 0;
             try {
                 $document = $this->buildDocument($taxon, $channel, $locale, $productCount);
-            } catch (\RuntimeException $exception) {
+            } catch (\RuntimeException|TwigError $exception) {
                 $this->logger->error('Chatbot: building a category document failed, skipping it.', [
                     'taxon' => $taxon->getCode(),
                     'exception' => $exception,
@@ -324,7 +325,7 @@ class CategoriesDataSource implements ChatbotDataSourceInterface
 
         $description = $translation->getDescription();
         if ($description !== null && $description !== '') {
-            $text = $path . "\n\n" . $this->htmlToText->convert($description);
+            $text = $path . "\n\n" . $this->richTextToText->convert($description);
         }
 
         $metadata = [

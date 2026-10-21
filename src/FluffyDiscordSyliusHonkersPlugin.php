@@ -8,7 +8,9 @@ use BitBag\SyliusCmsPlugin\Entity\Page as BitBagPage;
 use FluffyDiscord\SyliusHonkersPlugin\DataSource\BitBagCmsPagesDataSource;
 use FluffyDiscord\SyliusHonkersPlugin\DataSource\CmsPagesDataSource;
 use FluffyDiscord\SyliusHonkersPlugin\DependencyInjection\Compiler\SyliusContextAliasPass;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use MonsieurBiz\SyliusCmsPagePlugin\Entity\Page;
+use MonsieurBiz\SyliusRichEditorPlugin\Twig\RichEditorExtension;
 use Sylius\Bundle\UiBundle\Registry\TemplateBlock;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -66,6 +68,15 @@ class FluffyDiscordSyliusHonkersPlugin extends AbstractBundle
                 ->autowire()
                 ->autoconfigure()
                 ->arg('$pageRepository', service('monsieurbiz_cms_page.repository.page'));
+        }
+
+        $isRichEditorPluginInstalled = class_exists(RichEditorExtension::class);
+        if ($isRichEditorPluginInstalled) {
+            $configurator->services()
+                ->set(RichTextToText::class)
+                ->autowire()
+                ->autoconfigure()
+                ->arg('$richEditor', service(RichEditorExtension::class));
         }
 
         $isBitBagCmsPluginInstalled = class_exists(BitBagPage::class);

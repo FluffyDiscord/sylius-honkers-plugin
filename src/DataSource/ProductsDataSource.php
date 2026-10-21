@@ -18,7 +18,7 @@ use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\CatalogSourceName;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
-use FluffyDiscord\Honkers\Text\HtmlToText;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Attribute\Model\AttributeValueInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -28,6 +28,7 @@ use Sylius\Component\Core\Repository\ProductVariantRepositoryInterface;
 use Sylius\Component\Taxonomy\Model\TaxonInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Error\Error as TwigError;
 
 class ProductsDataSource implements ChatbotDataSourceInterface
 {
@@ -36,7 +37,7 @@ class ProductsDataSource implements ChatbotDataSourceInterface
         private readonly ProductViewFactoryInterface  $productViewFactory,
         private readonly ProductIndexabilityInterface $productIndexability,
         private readonly CursorCodec                  $cursorCodec,
-        private readonly HtmlToText                   $htmlToText,
+        private readonly RichTextToText               $richTextToText,
         private readonly TranslatorInterface          $translator,
         private readonly LoggerInterface              $logger,
 
@@ -91,7 +92,7 @@ class ProductsDataSource implements ChatbotDataSourceInterface
             $lastFetchedId = $variant->getId();
             try {
                 $document = $this->buildDocument($variant, $channel, $locale);
-            } catch (\RuntimeException $exception) {
+            } catch (\RuntimeException|TwigError $exception) {
                 $this->logger->error('Chatbot: building a product document failed, skipping it.', [
                     'variant' => $variant->getCode(),
                     'exception' => $exception,
@@ -190,12 +191,12 @@ class ProductsDataSource implements ChatbotDataSourceInterface
 
         $shortDescription = $translation->getShortDescription();
         if ($shortDescription !== null && $shortDescription !== '') {
-            $sections[] = $this->htmlToText->convert($shortDescription);
+            $sections[] = $this->richTextToText->convert($shortDescription);
         }
 
         $description = $translation->getDescription();
         if ($description !== null && $description !== '') {
-            $sections[] = $this->htmlToText->convert($description);
+            $sections[] = $this->richTextToText->convert($description);
         }
 
         $attributeLines = [];

@@ -17,6 +17,9 @@ use FluffyDiscord\SyliusHonkersPlugin\DTO\ProductItem;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
 use FluffyDiscord\Honkers\Text\HtmlToText;
+use FluffyDiscord\SyliusHonkersPlugin\Tests\Unit\Fixtures\RichEditorFactory;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
+use MonsieurBiz\SyliusRichEditorPlugin\Twig\RichEditorExtension;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductVariantRepository;
@@ -34,7 +37,11 @@ class ProductsDataSourceTest extends TestCase
 {
     private ?string $capturedDql = null;
 
-    private function createDataSource(array $variants, ?\Closure $isIndexable = null): ProductsDataSource
+    private function createDataSource(
+        array $variants,
+        ?\Closure $isIndexable = null,
+        ?RichEditorExtension $richEditor = null,
+    ): ProductsDataSource
     {
         $query = $this->createStub(Query::class);
         $query->method('setParameters')->willReturnSelf();
@@ -86,7 +93,7 @@ class ProductsDataSourceTest extends TestCase
             $productViewFactory,
             $productIndexability,
             new CursorCodec(),
-            new HtmlToText(),
+            new RichTextToText(new HtmlToText(), $richEditor),
             $translator,
             new NullLogger(),
             $variantRepository,
@@ -106,12 +113,12 @@ class ProductsDataSourceTest extends TestCase
         return $taxon;
     }
 
-    private function createProduct(): ProductInterface
+    private function createProduct(?string $description = null): ProductInterface
     {
         $translation = $this->createStub(ProductTranslationInterface::class);
         $translation->method('getName')->willReturn('T-Shirt');
         $translation->method('getShortDescription')->willReturn(null);
-        $translation->method('getDescription')->willReturn(null);
+        $translation->method('getDescription')->willReturn($description);
 
         $mainTaxon = $this->createTaxon('CLOTHING', 'Clothing');
 
@@ -130,7 +137,7 @@ class ProductsDataSourceTest extends TestCase
         return $product;
     }
 
-    private function createVariant(int $id = 5): ProductVariantInterface
+    private function createVariant(int $id = 5, ?string $description = null): ProductVariantInterface
     {
         $translation = $this->createStub(ProductVariantTranslationInterface::class);
         $translation->method('getName')->willReturn(null);
@@ -138,7 +145,7 @@ class ProductsDataSourceTest extends TestCase
         $variant = $this->createStub(ProductVariantInterface::class);
         $variant->method('getId')->willReturn($id);
         $variant->method('getCode')->willReturn('T-SHIRT-01_black');
-        $variant->method('getProduct')->willReturn($this->createProduct());
+        $variant->method('getProduct')->willReturn($this->createProduct($description));
         $variant->method('getTranslation')->willReturn($translation);
         $variant->method('getOptionValues')->willReturn(new ArrayCollection());
         $variant->method('getUpdatedAt')->willReturn(new \DateTime('2026-01-01T00:00:00+00:00'));
@@ -172,6 +179,21 @@ class ProductsDataSourceTest extends TestCase
         self::assertSame(['Clothing', 'T-Shirts'], $document->metadata['taxonNames']);
         self::assertStringContainsString('Clothing, T-Shirts', $document->text);
         self::assertStringContainsString('Clothing', $document->text);
+    }
+
+    public function testRichEditorDescriptionIsIndexedAsItsRenderedText(): void
+    {
+        $richEditorDescription = json_encode([
+            ['code' => 'monsieurbiz.html', 'data' => ['content' => '<p>Quiet motor, <strong>no vibration</strong>.</p>']],
+        ]);
+        $variant = $this->createVariant(5, $richEditorDescription);
+        $dataSource = $this->createDataSource([$variant], richEditor: (new RichEditorFactory())->create());
+
+        $page = $dataSource->getDocuments(new SourceQuery('cs_CZ'));
+
+        $text = $page->documents[0]->text;
+        self::assertStringContainsString('Quiet motor, no vibration.', $text);
+        self::assertStringNotContainsString('monsieurbiz.html', $text);
     }
 
     public function testDocumentCarriesNoContentHash(): void

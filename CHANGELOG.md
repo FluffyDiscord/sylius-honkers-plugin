@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.2
+
+### Fixed
+
+- Product, category and CMS page descriptions written in the MonsieurBiz rich editor reach the chatbot as plain text.
+  The editor's JSON wrapper was sent along before. Run `notify-all` once after updating to resend the catalog.
+
 ## v2.0.1
 
 ### Changed

@@ -21,6 +21,7 @@ use FluffyDiscord\SyliusHonkersPlugin\Contract\ChannelTaxonRootsInterface;
 use FluffyDiscord\SyliusHonkersPlugin\Taxon\ChannelTaxonRoots;
 use FluffyDiscord\SyliusHonkersPlugin\Tests\Unit\Fixtures\SharedTaxonRoots;
 use FluffyDiscord\Honkers\Text\HtmlToText;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Sylius\Bundle\CoreBundle\Doctrine\ORM\ProductRepository;
@@ -94,7 +95,7 @@ class CategoriesDataSourceTest extends TestCase
             $channelResolver,
             $channelTaxonRoots ?? new ChannelTaxonRoots($taxonRepository),
             new CursorCodec(),
-            new HtmlToText(),
+            new RichTextToText(new HtmlToText()),
             new ChannelUrlGenerator($router),
             new NullLogger(),
         );

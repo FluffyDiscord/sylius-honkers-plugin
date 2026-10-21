@@ -19,7 +19,7 @@ use FluffyDiscord\Honkers\DTO\SourceDefinition;
 use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
-use FluffyDiscord\Honkers\Text\HtmlToText;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 
@@ -29,7 +29,7 @@ class BitBagCmsPagesDataSource implements ChatbotDataSourceInterface
         private readonly PageRepositoryInterface $pageRepository,
         private readonly ChannelResolver         $channelResolver,
         private readonly CursorCodec             $cursorCodec,
-        private readonly HtmlToText              $htmlToText,
+        private readonly RichTextToText          $richTextToText,
         private readonly ChannelUrlGenerator     $channelUrlGenerator,
         private readonly LoggerInterface         $logger,
     ) {
@@ -137,7 +137,7 @@ class BitBagCmsPagesDataSource implements ChatbotDataSourceInterface
         $content = $translation->getContent();
         $text = $title;
         if ($content !== null && $content !== '') {
-            $text = $title . "\n\n" . $this->htmlToText->convert($content);
+            $text = $title . "\n\n" . $this->richTextToText->convert($content);
         }
 
         $metadata = [

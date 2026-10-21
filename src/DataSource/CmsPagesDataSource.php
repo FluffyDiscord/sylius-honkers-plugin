@@ -18,10 +18,9 @@ use FluffyDiscord\Honkers\DTO\SourceDefinition;
 use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
-use FluffyDiscord\Honkers\Text\HtmlToText;
+use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
-use MonsieurBiz\SyliusRichEditorPlugin\Twig\RichEditorExtension;
 use Twig\Error\Error as TwigError;
 
 class CmsPagesDataSource implements ChatbotDataSourceInterface
@@ -30,9 +29,8 @@ class CmsPagesDataSource implements ChatbotDataSourceInterface
         private readonly PageRepositoryInterface $pageRepository,
         private readonly ChannelResolver         $channelResolver,
         private readonly CursorCodec             $cursorCodec,
-        private readonly HtmlToText              $htmlToText,
+        private readonly RichTextToText          $richTextToText,
         private readonly ChannelUrlGenerator     $channelUrlGenerator,
-        private readonly RichEditorExtension     $richEditor,
         private readonly LoggerInterface         $logger,
     ) {
     }
@@ -138,8 +136,7 @@ class CmsPagesDataSource implements ChatbotDataSourceInterface
         $content = $translation->getContent();
         $text = $title;
         if ($content !== null && $content !== '') {
-            $html = $this->richEditor->renderField([], $content);
-            $text = $title . "\n\n" . $this->htmlToText->convert($html);
+            $text = $title . "\n\n" . $this->richTextToText->convert($content);
         }
 
         $metadata = [
