@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.0
+
+### Added
+
+- Products send their associations (accessories, related products, …) by type name: name and variant code of each
+  sellable associated product. The chatbot can tell which blades fit a clipper. Run `notify-all` once after updating.
+
 ## v2.0.3
 
 ### Fixed

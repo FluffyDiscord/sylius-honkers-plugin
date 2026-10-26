@@ -29,6 +29,9 @@ use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Sylius\Component\Core\Model\ProductVariant;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
+use Sylius\Component\Product\Model\ProductAssociationInterface;
+use Sylius\Component\Product\Model\ProductAssociationTypeInterface;
+use Sylius\Component\Product\Model\ProductAssociationTypeTranslationInterface;
 use Sylius\Component\Product\Model\ProductVariantTranslationInterface;
 use Sylius\Component\Taxonomy\Model\TaxonTranslationInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -113,7 +116,10 @@ class ProductsDataSourceTest extends TestCase
         return $taxon;
     }
 
-    private function createProduct(?string $description = null): ProductInterface
+    /**
+     * @param list<ProductAssociationInterface> $associations
+     */
+    private function createProduct(?string $description = null, array $associations = []): ProductInterface
     {
         $translation = $this->createStub(ProductTranslationInterface::class);
         $translation->method('getName')->willReturn('T-Shirt');
@@ -133,19 +139,55 @@ class ProductsDataSourceTest extends TestCase
         ]));
         $product->method('getMainTaxon')->willReturn($mainTaxon);
         $product->method('getUpdatedAt')->willReturn(new \DateTime('2026-01-01T00:00:00+00:00'));
+        $product->method('getAssociations')->willReturn(new ArrayCollection($associations));
 
         return $product;
     }
 
-    private function createVariant(int $id = 5, ?string $description = null): ProductVariantInterface
+    private function createAssociatedProduct(string $name, ProductVariantInterface $variant): ProductInterface
     {
+        $translation = $this->createStub(ProductTranslationInterface::class);
+        $translation->method('getName')->willReturn($name);
+
+        $product = $this->createStub(ProductInterface::class);
+        $product->method('getTranslation')->willReturn($translation);
+        $product->method('getVariants')->willReturn(new ArrayCollection([$variant]));
+
+        return $product;
+    }
+
+    /**
+     * @param list<ProductInterface> $associatedProducts
+     */
+    private function createAssociation(string $typeName, array $associatedProducts): ProductAssociationInterface
+    {
+        $typeTranslation = $this->createStub(ProductAssociationTypeTranslationInterface::class);
+        $typeTranslation->method('getName')->willReturn($typeName);
+
+        $type = $this->createStub(ProductAssociationTypeInterface::class);
+        $type->method('getTranslation')->willReturn($typeTranslation);
+        $type->method('getCode')->willReturn('accessories');
+
+        $association = $this->createStub(ProductAssociationInterface::class);
+        $association->method('getType')->willReturn($type);
+        $association->method('getAssociatedProducts')->willReturn(new ArrayCollection($associatedProducts));
+
+        return $association;
+    }
+
+    private function createVariant(
+        int $id = 5,
+        ?string $description = null,
+        ?ProductInterface $product = null,
+        string $code = 'T-SHIRT-01_black',
+    ): ProductVariantInterface {
         $translation = $this->createStub(ProductVariantTranslationInterface::class);
         $translation->method('getName')->willReturn(null);
 
         $variant = $this->createStub(ProductVariantInterface::class);
         $variant->method('getId')->willReturn($id);
-        $variant->method('getCode')->willReturn('T-SHIRT-01_black');
-        $variant->method('getProduct')->willReturn($this->createProduct($description));
+        $variant->method('getCode')->willReturn($code);
+        $variant->method('getProduct')->willReturn($product ?? $this->createProduct($description));
         $variant->method('getTranslation')->willReturn($translation);
         $variant->method('getOptionValues')->willReturn(new ArrayCollection());
         $variant->method('getUpdatedAt')->willReturn(new \DateTime('2026-01-01T00:00:00+00:00'));
@@ -179,6 +221,29 @@ class ProductsDataSourceTest extends TestCase
         self::assertSame(['Clothing', 'T-Shirts'], $document->metadata['taxonNames']);
         self::assertStringContainsString('Clothing, T-Shirts', $document->text);
         self::assertStringContainsString('Clothing', $document->text);
+    }
+
+    public function testMetadataListsOnlyIndexableAssociatedProductsByTypeName(): void
+    {
+        $sellableBladeVariant = $this->createVariant(6, code: 'BLADE-05_default');
+        $disabledClipperVariant = $this->createVariant(7, code: 'CLASS-45_default');
+        $associatedProducts = [
+            $this->createAssociatedProduct('Blade 0.5 mm', $sellableBladeVariant),
+            $this->createAssociatedProduct('Class 45', $disabledClipperVariant),
+        ];
+        $product = $this->createProduct(associations: [$this->createAssociation('Příslušenství', $associatedProducts)]);
+        $dataSource = $this->createDataSource(
+            [$this->createVariant(product: $product), $this->createVariant()],
+            static fn (ProductVariantInterface $variant): bool => $variant !== $disabledClipperVariant,
+        );
+
+        $page = $dataSource->getDocuments(new SourceQuery('cs_CZ'));
+
+        self::assertSame(
+            ['Příslušenství' => [['code' => 'BLADE-05_default', 'name' => 'Blade 0.5 mm']]],
+            $page->documents[0]->metadata['associations'],
+        );
+        self::assertArrayNotHasKey('associations', $page->documents[1]->metadata);
     }
 
     public function testRichEditorDescriptionIsIndexedAsItsRenderedText(): void

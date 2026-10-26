@@ -25,6 +25,8 @@ use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Repository\ProductVariantRepositoryInterface;
+use Sylius\Component\Product\Model\ProductAssociationInterface;
+use Sylius\Component\Product\Model\ProductInterface as BaseProductInterface;
 use Sylius\Component\Taxonomy\Model\TaxonInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -158,6 +160,12 @@ class ProductsDataSource implements ChatbotDataSourceInterface
             'attributes' => $attributes,
             'options' => $optionValues,
         ];
+
+        $associations = $this->collectAssociations($product, $channel, $locale);
+
+        if ($associations !== []) {
+            $metadata['associations'] = $associations;
+        }
 
         $text = $this->buildText($product, $locale, $item->name, $attributes, $taxonNames, $optionValues);
         $updatedAt = $variant->getUpdatedAt() ?? $product->getUpdatedAt() ?? $product->getCreatedAt() ?? new \DateTimeImmutable();
@@ -309,6 +317,88 @@ class ProductsDataSource implements ChatbotDataSourceInterface
         }
 
         return $options;
+    }
+
+    /**
+     * @return array<string, list<array{code: string, name: string}>>
+     */
+    private function collectAssociations(ProductInterface $product, ChannelInterface $channel, string $locale): array
+    {
+        $associations = [];
+
+        foreach ($product->getAssociations() as $association) {
+            $typeName = $this->findAssociationTypeName($association, $locale);
+
+            if ($typeName === null) {
+                continue;
+            }
+
+            foreach ($association->getAssociatedProducts() as $associatedProduct) {
+                $isSelf = $associatedProduct === $product;
+
+                if ($isSelf) {
+                    continue;
+                }
+
+                $name = $associatedProduct->getTranslation($locale)->getName() ?? '';
+                $code = $this->findIndexableVariantCode($associatedProduct, $channel);
+                $hasName = $name !== '';
+
+                if (!$hasName) {
+                    continue;
+                }
+
+                if ($code === null) {
+                    continue;
+                }
+
+                $associations[$typeName][$code] = ['code' => $code, 'name' => $name];
+            }
+        }
+
+        return array_map(array_values(...), $associations);
+    }
+
+    private function findAssociationTypeName(ProductAssociationInterface $association, string $locale): ?string
+    {
+        $type = $association->getType();
+
+        if ($type === null) {
+            return null;
+        }
+
+        $translatedName = $type->getTranslation($locale)->getName() ?? '';
+
+        if ($translatedName !== '') {
+            return $translatedName;
+        }
+
+        $code = $type->getCode() ?? '';
+
+        if ($code === '') {
+            return null;
+        }
+
+        return $code;
+    }
+
+    private function findIndexableVariantCode(BaseProductInterface $product, ChannelInterface $channel): ?string
+    {
+        foreach ($product->getVariants() as $variant) {
+            $isCoreVariant = $variant instanceof ProductVariantInterface;
+
+            if (!$isCoreVariant) {
+                continue;
+            }
+
+            $isIndexable = $this->productIndexability->isIndexable($variant, $channel);
+
+            if ($isIndexable) {
+                return $variant->getCode();
+            }
+        }
+
+        return null;
     }
 
     /**
