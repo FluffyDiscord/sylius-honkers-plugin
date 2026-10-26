@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.3
+
+### Fixed
+
+- Saving a product or category with a numeric code (`500`) notifies the chatbot again. The code was sent as a JSON
+  number and the backend answered `422`.
+
 ## v2.0.2
 
 ### Fixed

@@ -23,7 +23,7 @@ use Symfony\Contracts\Service\ResetInterface;
 
 class CatalogChangeNotifier implements ResetInterface
 {
-    /** @var array<string, array{source: CatalogSourceName, locale: string, externalIds: array<string, true>}> */
+    /** @var array<string, array{source: CatalogSourceName, locale: string, externalIds: array<array-key, string>}> */
     private array $pendingChanges = [];
 
     private bool $hasLoggedOverflow = false;
@@ -79,7 +79,7 @@ class CatalogChangeNotifier implements ResetInterface
             $this->pendingChanges[$key] = ['source' => $source, 'locale' => $locale, 'externalIds' => []];
         }
 
-        $this->pendingChanges[$key]['externalIds'][$externalId] = true;
+        $this->pendingChanges[$key]['externalIds'][$externalId] = $externalId;
     }
 
     #[AsEventListener(event: KernelEvents::TERMINATE)]
@@ -160,14 +160,14 @@ class CatalogChangeNotifier implements ResetInterface
     }
 
     /**
-     * @param array<string, array{source: CatalogSourceName, locale: string, externalIds: array<string, true>}> $pendingChanges
+     * @param array<string, array{source: CatalogSourceName, locale: string, externalIds: array<array-key, string>}> $pendingChanges
      */
     private function dispatchChanges(array $pendingChanges, SiteKeyRouting $siteKeyRouting): void
     {
         $maxExternalIds = $this->catalogIngestClient->getMaxExternalIdsPerRequest();
 
         foreach ($pendingChanges as $change) {
-            $externalIds = array_keys($change['externalIds']);
+            $externalIds = array_values($change['externalIds']);
             $batches = array_chunk($externalIds, $maxExternalIds);
             foreach ($siteKeyRouting->getSiteCredentials($change['locale']) as $siteCredentials) {
                 foreach ($batches as $batch) {
@@ -282,7 +282,7 @@ class CatalogChangeNotifier implements ResetInterface
     }
 
     /**
-     * @param array<string, array{source: CatalogSourceName, locale: string, externalIds: array<string, true>}> $pendingChanges
+     * @param array<string, array{source: CatalogSourceName, locale: string, externalIds: array<array-key, string>}> $pendingChanges
      */
     private function getSiteKeyRouting(array $pendingChanges): SiteKeyRouting
     {

@@ -384,6 +384,7 @@ class CatalogChangeNotifierTest extends TestCase
 
         $notifier->collect(CatalogSourceName::Products, 'cs_CZ', 'T-SHIRT-01');
         $notifier->collect(CatalogSourceName::Products, 'cs_CZ', 'T-SHIRT-01');
+        $notifier->collect(CatalogSourceName::Products, 'cs_CZ', '500');
         $notifier->collect(CatalogSourceName::Products, 'en_US', 'T-SHIRT-01');
         $notifier->collect(CatalogSourceName::Categories, 'cs_CZ', 'T_SHIRTS');
         $notifier->flush();
@@ -392,7 +393,7 @@ class CatalogChangeNotifierTest extends TestCase
         $firstRequest = $this->capturedRequests[0];
         self::assertSame('https://backend.example/api/v1/catalog/changes', $firstRequest['url']);
         self::assertSame(
-            ['source' => 'products', 'locale' => 'cs_CZ', 'externalIds' => ['T-SHIRT-01']],
+            ['source' => 'products', 'locale' => 'cs_CZ', 'externalIds' => ['T-SHIRT-01', '500']],
             json_decode($firstRequest['options']['body'], true),
         );
         self::assertContains('Authorization: Bearer site-key.ingest-secret', $firstRequest['options']['headers']);
