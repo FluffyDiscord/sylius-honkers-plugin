@@ -1,0 +1,34 @@
+fluffydiscord_honkers:
+    error:
+        invalid_channel: 'Der angeforderte Kanal existiert nicht.'
+        ambiguous_taxon_tree: 'Der Kanal hat kein Menü-Taxon und der Shop hat mehrere Kategoriebäume, daher lässt sich nicht bestimmen, welche Kategorien zu ihm gehören.'
+    tool:
+        get_order_status:
+            description: 'Sucht den aktuellen Status einer Kundenbestellung anhand der Bestellnummer und der E-Mail-Adresse des Kunden.'
+            form:
+                title: 'Bestellstatus'
+                order_number: 'Bestellnummer'
+                email: 'E-Mail-Adresse'
+                submit: 'Status prüfen'
+            not_found: 'Die Bestellung %number% wurde für die angegebene E-Mail-Adresse nicht gefunden. Bitte prüfen Sie die Bestellnummer und die beim Kauf verwendete E-Mail-Adresse.'
+            summary: 'Bestellung %number%: Status %state%, Zahlung %paymentState%, Versand %shippingState%, Artikel %items%, Gesamtbetrag %total%.%tracking%'
+            tracking: ' Sendungsverfolgung: %codes%.'
+        get_product_availability:
+            description: 'Gibt den aktuellen Preis, die Währung und die Lagerverfügbarkeit von bis zu 20 Produkten anhand ihrer Produktcodes zurück.'
+            unknown: 'Das Produkt mit dem Code %code% wurde nicht gefunden.'
+            line_in_stock: '%code% — %name%: %price% %currency%, auf Lager.'
+            line_out_of_stock: '%code% — %name%: %price% %currency%, derzeit nicht auf Lager.'
+    source:
+        products:
+            description: 'Aktive Produkte des Verkaufskanals, einschließlich Beschreibung, Attributen, Preis und Verfügbarkeit.'
+        categories:
+            description: 'Aktive Produktkategorien des Verkaufskanals, einschließlich Kategoriepfad und Beschreibung.'
+        cms_pages:
+            description: 'Veröffentlichte CMS-Seiten des Shops.'
+    attribute_value:
+        'yes': 'ja'
+        'no': 'nein'
+    admin:
+        order:
+            from_chat: 'Aus dem Chatbot'
+            open_conversation: 'Unterhaltung öffnen'

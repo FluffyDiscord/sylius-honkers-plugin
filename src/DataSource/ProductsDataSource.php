@@ -18,6 +18,8 @@ use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\CatalogSourceName;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
+use FluffyDiscord\HonkersBundle\FluffyDiscordHonkersBundle;
+use FluffyDiscord\HonkersBundle\Translation\ChannelFallbackTranslator;
 use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Attribute\Model\AttributeValueInterface;
@@ -40,6 +42,8 @@ class ProductsDataSource implements ChatbotDataSourceInterface
         private readonly ProductIndexabilityInterface $productIndexability,
         private readonly CursorCodec                  $cursorCodec,
         private readonly RichTextToText               $richTextToText,
+
+        #[Autowire(service: ChannelFallbackTranslator::class)]
         private readonly TranslatorInterface          $translator,
         private readonly LoggerInterface              $logger,
 
@@ -53,6 +57,7 @@ class ProductsDataSource implements ChatbotDataSourceInterface
         return new SourceDefinition(
             CatalogSourceName::Products->value,
             'fluffydiscord_honkers.source.products.description',
+            translationDomain: FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
         );
     }
 
@@ -271,7 +276,7 @@ class ProductsDataSource implements ChatbotDataSourceInterface
                 ? 'fluffydiscord_honkers.attribute_value.yes'
                 : 'fluffydiscord_honkers.attribute_value.no';
 
-            return $this->translator->trans($translationKey, [], 'messages', $locale);
+            return $this->translator->trans($translationKey, [], FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN, $locale);
         }
 
         if ($value instanceof \DateTimeInterface) {

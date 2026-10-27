@@ -1,0 +1,34 @@
+fluffydiscord_honkers:
+    error:
+        invalid_channel: 'Zahtevani kanal ne obstaja.'
+        ambiguous_taxon_tree: 'Kanal nima nastavljenega taksona menija, trgovina pa ima več dreves kategorij, zato ni mogoče določiti, katere kategorije mu pripadajo.'
+    tool:
+        get_order_status:
+            description: 'Poišče trenutno stanje naročila stranke po številki naročila in e-poštnem naslovu stranke.'
+            form:
+                title: 'Stanje naročila'
+                order_number: 'Številka naročila'
+                email: 'E-poštni naslov'
+                submit: 'Preveri stanje'
+            not_found: 'Naročila %number% za vneseni e-poštni naslov nismo našli. Prosimo, preverite številko naročila in e-poštni naslov, ki ste ga uporabili pri nakupu.'
+            summary: 'Naročilo %number%: stanje %state%, plačilo %paymentState%, dostava %shippingState%, artiklov %items%, skupaj %total%.%tracking%'
+            tracking: ' Sledenje pošiljki: %codes%.'
+        get_product_availability:
+            description: 'Vrne trenutno ceno, valuto in razpoložljivost na zalogi za največ 20 izdelkov glede na njihove kode.'
+            unknown: 'Izdelka s kodo %code% ni bilo mogoče najti.'
+            line_in_stock: '%code% — %name%: %price% %currency%, na zalogi.'
+            line_out_of_stock: '%code% — %name%: %price% %currency%, trenutno ni na zalogi.'
+    source:
+        products:
+            description: 'Aktivni izdelki prodajnega kanala, vključno z opisom, atributi, ceno in razpoložljivostjo.'
+        categories:
+            description: 'Aktivne kategorije izdelkov prodajnega kanala, vključno s potjo kategorije in opisom.'
+        cms_pages:
+            description: 'Objavljene strani CMS trgovine.'
+    attribute_value:
+        'yes': 'da'
+        'no': 'ne'
+    admin:
+        order:
+            from_chat: 'Iz chatbota'
+            open_conversation: 'Odpri pogovor'

@@ -7,6 +7,7 @@ namespace FluffyDiscord\SyliusHonkersPlugin\Locale;
 use FluffyDiscord\Honkers\Contract\ChatbotLocaleContextInterface;
 use FluffyDiscord\Honkers\Locale\LocaleMatcher;
 use FluffyDiscord\SyliusHonkersPlugin\Channel\ChannelResolver;
+use FluffyDiscord\SyliusHonkersPlugin\Exception\InvalidChannelException;
 use Sylius\Component\Locale\Context\LocaleContextInterface;
 use Sylius\Component\Locale\Model\LocaleInterface;
 
@@ -27,6 +28,20 @@ class SyliusLocaleContext implements ChatbotLocaleContextInterface
     public function getCurrentLocale(): string
     {
         return $this->localeContext->getLocaleCode();
+    }
+
+    public function getDefaultLocale(): string
+    {
+        try {
+            $channel = $this->channelResolver->getChannel();
+        } catch (InvalidChannelException) {
+            return $this->getCurrentLocale();
+        }
+
+        $defaultLocale = $channel->getDefaultLocale();
+        $defaultLocaleCode = $defaultLocale?->getCode();
+
+        return $defaultLocaleCode ?? $this->getCurrentLocale();
     }
 
     /**

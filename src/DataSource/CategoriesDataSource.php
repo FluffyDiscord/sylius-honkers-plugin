@@ -20,6 +20,7 @@ use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\CatalogSourceName;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
+use FluffyDiscord\HonkersBundle\FluffyDiscordHonkersBundle;
 use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -50,6 +51,7 @@ class CategoriesDataSource implements ChatbotDataSourceInterface
         return new SourceDefinition(
             CatalogSourceName::Categories->value,
             'fluffydiscord_honkers.source.categories.description',
+            translationDomain: FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
         );
     }
 

@@ -249,6 +249,9 @@ The backend calls these mid-conversation for live data:
 
 Add your own tool → [Symfony bundle README](https://github.com/FluffyDiscord/symfony-honkers-bundle#add-a-tool).
 
+**Their texts ship in cs, en, de, sk, pl, hu, ro, sl, hr and ru**, in the `honkers` domain; a missing language
+falls back to the channel's default locale. Override or add one → [Translations](https://github.com/FluffyDiscord/symfony-honkers-bundle#translations).
+
 ## Shipped sources
 
 The backend pulls these in bulk and ingests them into its retrieval index:

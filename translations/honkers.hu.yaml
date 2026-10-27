@@ -1,0 +1,34 @@
+fluffydiscord_honkers:
+    error:
+        invalid_channel: 'A kért csatorna nem létezik.'
+        ambiguous_taxon_tree: 'A csatornához nincs beállítva menü taxon, és az áruháznak több kategóriafája van, ezért nem állapítható meg, mely kategóriák tartoznak hozzá.'
+    tool:
+        get_order_status:
+            description: 'Lekérdezi egy vásárlói rendelés aktuális állapotát a rendelésszám és a vásárló e-mail-címe alapján.'
+            form:
+                title: 'Rendelés állapota'
+                order_number: 'Rendelésszám'
+                email: 'E-mail-cím'
+                submit: 'Állapot lekérdezése'
+            not_found: 'A(z) %number% számú rendelés nem található a megadott e-mail-címmel. Kérjük, ellenőrizze a rendelésszámot és a vásárláskor megadott e-mail-címet.'
+            summary: 'Rendelés %number%: állapot %state%, fizetés %paymentState%, szállítás %shippingState%, tételek száma %items%, összesen %total%.%tracking%'
+            tracking: ' Csomagkövetés: %codes%.'
+        get_product_availability:
+            description: 'Legfeljebb 20 termék aktuális árát, pénznemét és készletállapotát adja vissza a termékkódjuk alapján.'
+            unknown: 'A(z) %code% kódú termék nem található.'
+            line_in_stock: '%code% — %name%: %price% %currency%, raktáron.'
+            line_out_of_stock: '%code% — %name%: %price% %currency%, jelenleg nincs raktáron.'
+    source:
+        products:
+            description: 'Az értékesítési csatorna aktív termékei leírással, tulajdonságokkal, árral és elérhetőséggel.'
+        categories:
+            description: 'Az értékesítési csatorna aktív termékkategóriái a kategóriaútvonallal és a leírással.'
+        cms_pages:
+            description: 'Az áruház közzétett CMS-oldalai.'
+    attribute_value:
+        'yes': 'igen'
+        'no': 'nem'
+    admin:
+        order:
+            from_chat: 'A chatbotból'
+            open_conversation: 'Beszélgetés megnyitása'

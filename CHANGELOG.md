@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.1.1
+
+### Added
+
+- Tool, source and order-status texts in de, sk, pl, hu, ro, sl, hr and ru. A German visitor no longer gets the
+  order form in Czech.
+
+### Fixed
+
+- `get_order_status` finds an order pasted as `#19887372` or ` 000-000 042 `. The number is looked up as typed
+  (trimmed) first, then with only ASCII letters and digits; `FR-000123`-style numbers keep matching. Spaces around
+  the e-mail are ignored.
+
+### Changed
+
+- **The plugin's strings moved from `messages` to `honkers`.** Overriding them in `translations/messages.*`? Rename
+  the files to `translations/honkers.<locale>.yaml`; the keys stay the same.
+- A string missing in the visitor's language comes from the channel's default locale, not the app's fallback
+  locales.
+- Requires `fluffydiscord/honkers-sdk` ^2.0.3 and `fluffydiscord/symfony-honkers-bundle` ^2.0.1.
+
 ## v2.1.0
 
 ### Added

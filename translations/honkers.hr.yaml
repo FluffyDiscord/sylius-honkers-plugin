@@ -1,0 +1,34 @@
+fluffydiscord_honkers:
+    error:
+        invalid_channel: 'Traženi kanal ne postoji.'
+        ambiguous_taxon_tree: 'Kanal nema postavljen takson izbornika, a trgovina ima više stabala kategorija, pa nije moguće odrediti koje kategorije mu pripadaju.'
+    tool:
+        get_order_status:
+            description: 'Dohvaća trenutni status narudžbe kupca prema broju narudžbe i e-mail adresi kupca.'
+            form:
+                title: 'Status narudžbe'
+                order_number: 'Broj narudžbe'
+                email: 'E-mail adresa'
+                submit: 'Provjeri status'
+            not_found: 'Narudžba %number% nije pronađena za unesenu e-mail adresu. Molimo provjerite broj narudžbe i e-mail adresu korištenu pri kupnji.'
+            summary: 'Narudžba %number%: status %state%, plaćanje %paymentState%, dostava %shippingState%, stavki %items%, ukupno %total%.%tracking%'
+            tracking: ' Praćenje pošiljke: %codes%.'
+        get_product_availability:
+            description: 'Vraća trenutnu cijenu, valutu i dostupnost na zalihi za najviše 20 proizvoda prema njihovim šiframa.'
+            unknown: 'Proizvod sa šifrom %code% nije pronađen.'
+            line_in_stock: '%code% — %name%: %price% %currency%, na zalihi.'
+            line_out_of_stock: '%code% — %name%: %price% %currency%, trenutno nije na zalihi.'
+    source:
+        products:
+            description: 'Aktivni proizvodi prodajnog kanala, uključujući opis, atribute, cijenu i dostupnost.'
+        categories:
+            description: 'Aktivne kategorije proizvoda prodajnog kanala, uključujući putanju kategorije i opis.'
+        cms_pages:
+            description: 'Objavljene CMS stranice trgovine.'
+    attribute_value:
+        'yes': 'da'
+        'no': 'ne'
+    admin:
+        order:
+            from_chat: 'Iz chatbota'
+            open_conversation: 'Otvori razgovor'

@@ -1,0 +1,34 @@
+fluffydiscord_honkers:
+    error:
+        invalid_channel: 'Požadovaný kanál neexistuje.'
+        ambiguous_taxon_tree: 'Kanál nemá nastavený menu taxon a obchod má viac stromov kategórií, preto nie je možné určiť, ktoré kategórie mu patria.'
+    tool:
+        get_order_status:
+            description: 'Vyhľadá aktuálny stav objednávky podľa jej čísla a e-mailu zákazníka.'
+            form:
+                title: 'Stav objednávky'
+                order_number: 'Číslo objednávky'
+                email: 'E-mailová adresa'
+                submit: 'Zistiť stav'
+            not_found: 'Objednávka %number% sa pre zadaný e-mail nenašla. Skontrolujte, prosím, číslo objednávky a e-mail použitý pri nákupe.'
+            summary: 'Objednávka %number%: stav %state%, platba %paymentState%, doprava %shippingState%, položiek %items%, spolu %total%.%tracking%'
+            tracking: ' Sledovanie zásielky: %codes%.'
+        get_product_availability:
+            description: 'Vracia aktuálnu cenu, menu a skladovú dostupnosť až 20 produktov podľa ich kódov.'
+            unknown: 'Produkt s kódom %code% sa nenašiel.'
+            line_in_stock: '%code% — %name%: %price% %currency%, na sklade.'
+            line_out_of_stock: '%code% — %name%: %price% %currency%, momentálne nie je na sklade.'
+    source:
+        products:
+            description: 'Aktívne produkty predajného kanála vrátane popisu, atribútov, ceny a dostupnosti.'
+        categories:
+            description: 'Aktívne kategórie produktov predajného kanála vrátane cesty kategórií a popisu.'
+        cms_pages:
+            description: 'Publikované CMS stránky obchodu.'
+    attribute_value:
+        'yes': 'áno'
+        'no': 'nie'
+    admin:
+        order:
+            from_chat: 'Z chatbota'
+            open_conversation: 'Otvoriť konverzáciu'

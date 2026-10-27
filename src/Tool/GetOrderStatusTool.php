@@ -13,17 +13,22 @@ use FluffyDiscord\Honkers\DTO\ToolDefinition;
 use FluffyDiscord\Honkers\DTO\ToolResult;
 use FluffyDiscord\Honkers\DTO\ToolUiHints;
 use FluffyDiscord\Honkers\Enum\FormFieldType;
+use FluffyDiscord\HonkersBundle\FluffyDiscordHonkersBundle;
+use FluffyDiscord\HonkersBundle\Translation\ChannelFallbackTranslator;
 use FluffyDiscord\SyliusHonkersPlugin\Tool\DTO\OrderStatusArguments;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\ShipmentInterface;
 use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Component\Order\Model\OrderInterface as BaseOrderInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class GetOrderStatusTool implements ChatbotToolInterface
 {
     public function __construct(
         private readonly OrderRepositoryInterface $orderRepository,
+
+        #[Autowire(service: ChannelFallbackTranslator::class)]
         private readonly TranslatorInterface $translator,
     ) {
     }
@@ -52,6 +57,7 @@ class GetOrderStatusTool implements ChatbotToolInterface
                 ],
                 'fluffydiscord_honkers.tool.get_order_status.form.submit',
             )),
+            translationDomain: FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
         );
     }
 
@@ -62,13 +68,13 @@ class GetOrderStatusTool implements ChatbotToolInterface
 
     public function execute(object $arguments, ToolCallContext $context): ToolResult
     {
-        $order = $this->orderRepository->findOneByNumber($arguments->orderNumber);
-        $isVisible = $order instanceof OrderInterface && $this->isOwnedBy($order, $arguments->email);
+        $order = $this->findOrder($arguments);
+        $isVisible = $order instanceof OrderInterface && $this->isOwnedBy($order, $arguments->getTrimmedEmail());
         if (!$isVisible) {
             return new ToolResult([new ContentItem($this->translator->trans(
                 'fluffydiscord_honkers.tool.get_order_status.not_found',
-                ['%number%' => $arguments->orderNumber],
-                'messages',
+                ['%number%' => $arguments->getTrimmedOrderNumber()],
+                FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
                 $context->locale,
             ))]);
         }
@@ -84,9 +90,22 @@ class GetOrderStatusTool implements ChatbotToolInterface
                 '%total%' => $this->formatTotal($order),
                 '%tracking%' => $this->formatTracking($order, $context->locale),
             ],
-            'messages',
+            FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
             $context->locale,
         ))]);
+    }
+
+    private function findOrder(OrderStatusArguments $arguments): ?OrderInterface
+    {
+        $order = $this->orderRepository->findOneByNumber($arguments->getTrimmedOrderNumber());
+
+        if ($order instanceof OrderInterface) {
+            return $order;
+        }
+
+        $normalizedOrder = $this->orderRepository->findOneByNumber($arguments->getNormalizedOrderNumber());
+
+        return $normalizedOrder instanceof OrderInterface ? $normalizedOrder : null;
     }
 
     private function isOwnedBy(OrderInterface $order, string $email): bool
@@ -138,7 +157,7 @@ class GetOrderStatusTool implements ChatbotToolInterface
         return $this->translator->trans(
             'fluffydiscord_honkers.tool.get_order_status.tracking',
             ['%codes%' => implode(', ', $trackingCodes)],
-            'messages',
+            FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
             $locale,
         );
     }

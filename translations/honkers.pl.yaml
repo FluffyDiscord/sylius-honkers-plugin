@@ -1,0 +1,34 @@
+fluffydiscord_honkers:
+    error:
+        invalid_channel: 'Żądany kanał nie istnieje.'
+        ambiguous_taxon_tree: 'Kanał nie ma ustawionego taksonu menu, a sklep ma kilka drzew kategorii, więc nie można ustalić, które kategorie do niego należą.'
+    tool:
+        get_order_status:
+            description: 'Wyszukuje aktualny status zamówienia klienta na podstawie numeru zamówienia i adresu e-mail klienta.'
+            form:
+                title: 'Status zamówienia'
+                order_number: 'Numer zamówienia'
+                email: 'Adres e-mail'
+                submit: 'Sprawdź status'
+            not_found: 'Nie znaleziono zamówienia %number% dla podanego adresu e-mail. Prosimy sprawdzić numer zamówienia i adres e-mail podany przy zakupie.'
+            summary: 'Zamówienie %number%: status %state%, płatność %paymentState%, wysyłka %shippingState%, liczba pozycji %items%, razem %total%.%tracking%'
+            tracking: ' Śledzenie przesyłki: %codes%.'
+        get_product_availability:
+            description: 'Zwraca aktualną cenę, walutę i dostępność w magazynie dla maksymalnie 20 produktów na podstawie ich kodów.'
+            unknown: 'Nie znaleziono produktu o kodzie %code%.'
+            line_in_stock: '%code% — %name%: %price% %currency%, dostępny w magazynie.'
+            line_out_of_stock: '%code% — %name%: %price% %currency%, obecnie niedostępny.'
+    source:
+        products:
+            description: 'Aktywne produkty kanału sprzedaży wraz z opisem, atrybutami, ceną i dostępnością.'
+        categories:
+            description: 'Aktywne kategorie produktów kanału sprzedaży wraz ze ścieżką kategorii i opisem.'
+        cms_pages:
+            description: 'Opublikowane strony CMS sklepu.'
+    attribute_value:
+        'yes': 'tak'
+        'no': 'nie'
+    admin:
+        order:
+            from_chat: 'Z chatbota'
+            open_conversation: 'Otwórz rozmowę'

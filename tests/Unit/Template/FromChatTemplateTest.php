@@ -10,9 +10,10 @@ use FluffyDiscord\SyliusHonkersPlugin\Twig\ChatClickExtension;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\Order;
+use Symfony\Bridge\Twig\Extension\TranslationExtension;
+use Symfony\Component\Translation\IdentityTranslator;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use Twig\TwigFilter;
 
 class FromChatTemplateTest extends TestCase
 {
@@ -64,7 +65,7 @@ class FromChatTemplateTest extends TestCase
     private function render(string $template, Order $order): string
     {
         $twig = new Environment(new FilesystemLoader(__DIR__ . '/../../../templates'), ['strict_variables' => true]);
-        $twig->addFilter(new TwigFilter('trans', fn (string $key): string => $key));
+        $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
         $twig->addExtension(new ChatClickExtension('https://backend.test/'));
 
         $context = [

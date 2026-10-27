@@ -17,10 +17,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class GetOrderStatusToolTest extends TestCase
 {
-    private function createTool(?OrderInterface $order): GetOrderStatusTool
+    private function createTool(?OrderInterface $order, string $storedNumber = '000000042'): GetOrderStatusTool
     {
         $orderRepository = $this->createStub(OrderRepositoryInterface::class);
-        $orderRepository->method('findOneByNumber')->willReturn($order);
+        $orderRepository->method('findOneByNumber')->willReturnCallback(
+            fn (string $number): ?OrderInterface => $number === $storedNumber ? $order : null,
+        );
 
         $translator = $this->createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnCallback(
@@ -73,6 +75,30 @@ class GetOrderStatusToolTest extends TestCase
         self::assertStringContainsString('shipped', $text);
         self::assertStringContainsString('TRACK123', $text);
         self::assertSame([], $result->blocks);
+    }
+
+    public function testPastedOrderNumberAndEmailAreCleanedBeforeTheLookup(): void
+    {
+        $tool = $this->createTool($this->createOrder('customer@example.com'));
+
+        $result = $tool->execute(
+            new OrderStatusArguments(' #000-000 042. ', ' customer@example.com '),
+            $this->createContext(),
+        );
+
+        self::assertStringContainsString('get_order_status.summary', $result->content[0]->text);
+    }
+
+    public function testOrderNumberWithSeparatorsMatchesAsTyped(): void
+    {
+        $tool = $this->createTool($this->createOrder('customer@example.com'), 'FR-000042');
+
+        $result = $tool->execute(
+            new OrderStatusArguments('FR-000042', 'customer@example.com'),
+            $this->createContext(),
+        );
+
+        self::assertStringContainsString('get_order_status.summary', $result->content[0]->text);
     }
 
     public function testGuestOrderEmailMatchesCaseInsensitively(): void

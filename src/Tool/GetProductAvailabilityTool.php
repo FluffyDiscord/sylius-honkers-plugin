@@ -11,6 +11,8 @@ use FluffyDiscord\SyliusHonkersPlugin\DTO\ProductsBlock;
 use FluffyDiscord\Honkers\DTO\ToolCallContext;
 use FluffyDiscord\Honkers\DTO\ToolDefinition;
 use FluffyDiscord\Honkers\DTO\ToolResult;
+use FluffyDiscord\HonkersBundle\FluffyDiscordHonkersBundle;
+use FluffyDiscord\HonkersBundle\Translation\ChannelFallbackTranslator;
 use FluffyDiscord\SyliusHonkersPlugin\Product\ProductViewFactory;
 use FluffyDiscord\SyliusHonkersPlugin\Tool\DTO\ProductAvailabilityArguments;
 use Sylius\Component\Core\Model\ProductVariantInterface;
@@ -23,6 +25,8 @@ class GetProductAvailabilityTool implements ChatbotToolInterface
     public function __construct(
         private readonly ChannelResolver     $channelResolver,
         private readonly ProductViewFactory  $productViewFactory,
+
+        #[Autowire(service: ChannelFallbackTranslator::class)]
         private readonly TranslatorInterface $translator,
 
         #[Autowire(service: 'sylius.repository.product_variant')]
@@ -35,6 +39,7 @@ class GetProductAvailabilityTool implements ChatbotToolInterface
         return new ToolDefinition(
             'get_product_availability',
             'fluffydiscord_honkers.tool.get_product_availability.description',
+            translationDomain: FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
         );
     }
 
@@ -59,7 +64,7 @@ class GetProductAvailabilityTool implements ChatbotToolInterface
                 $contentLines[] = $this->translator->trans(
                     'fluffydiscord_honkers.tool.get_product_availability.unknown',
                     ['%code%' => $code],
-                    'messages',
+                    FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
                     $context->locale,
                 );
 
@@ -78,7 +83,7 @@ class GetProductAvailabilityTool implements ChatbotToolInterface
                     '%price%' => number_format($item->priceMinor / 100, 2, '.', ' '),
                     '%currency%' => $item->currency,
                 ],
-                'messages',
+                FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
                 $context->locale,
             );
         }

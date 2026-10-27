@@ -18,6 +18,7 @@ use FluffyDiscord\Honkers\DTO\SourceDefinition;
 use FluffyDiscord\Honkers\DTO\SourceDocument;
 use FluffyDiscord\Honkers\DTO\SourceQuery;
 use FluffyDiscord\Honkers\Enum\DocumentKind;
+use FluffyDiscord\HonkersBundle\FluffyDiscordHonkersBundle;
 use FluffyDiscord\SyliusHonkersPlugin\Text\RichTextToText;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -40,6 +41,7 @@ class CmsPagesDataSource implements ChatbotDataSourceInterface
         return new SourceDefinition(
             'cms_pages',
             'fluffydiscord_honkers.source.cms_pages.description',
+            translationDomain: FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
         );
     }
 
