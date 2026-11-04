@@ -8,6 +8,7 @@ use FluffyDiscord\Honkers\Contract\ChatbotToolInterface;
 use FluffyDiscord\Honkers\DTO\ContentItem;
 use FluffyDiscord\Honkers\DTO\FormDefinition;
 use FluffyDiscord\Honkers\DTO\FormField;
+use FluffyDiscord\Honkers\DTO\PrivateValue;
 use FluffyDiscord\Honkers\DTO\ToolCallContext;
 use FluffyDiscord\Honkers\DTO\ToolDefinition;
 use FluffyDiscord\Honkers\DTO\ToolResult;
@@ -25,6 +26,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class GetOrderStatusTool implements ChatbotToolInterface
 {
+    private const ORDER_NUMBER_KEY = 'customer_order_number';
+    private const EMAIL_KEY = 'customer_email';
+    private const TRACKING_CODE_KEY = 'tracking_code';
+
     public function __construct(
         private readonly OrderRepositoryInterface $orderRepository,
 
@@ -47,12 +52,14 @@ class GetOrderStatusTool implements ChatbotToolInterface
                         'fluffydiscord_honkers.tool.get_order_status.form.order_number',
                         FormFieldType::Text,
                         true,
+                        placeholder: self::ORDER_NUMBER_KEY,
                     ),
                     new FormField(
                         'email',
                         'fluffydiscord_honkers.tool.get_order_status.form.email',
                         FormFieldType::Email,
                         true,
+                        placeholder: self::EMAIL_KEY,
                     ),
                 ],
                 'fluffydiscord_honkers.tool.get_order_status.form.submit',
@@ -71,28 +78,36 @@ class GetOrderStatusTool implements ChatbotToolInterface
         $order = $this->findOrder($arguments);
         $isVisible = $order instanceof OrderInterface && $this->isOwnedBy($order, $arguments->getTrimmedEmail());
         if (!$isVisible) {
-            return new ToolResult([new ContentItem($this->translator->trans(
-                'fluffydiscord_honkers.tool.get_order_status.not_found',
-                ['%number%' => $arguments->getTrimmedOrderNumber()],
-                FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
-                $context->locale,
-            ))]);
+            return new ToolResult(
+                [new ContentItem($this->translator->trans(
+                    'fluffydiscord_honkers.tool.get_order_status.not_found',
+                    ['%number%' => $this->formatSlot(self::ORDER_NUMBER_KEY)],
+                    FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
+                    $context->locale,
+                ))],
+                privateValues: [new PrivateValue(self::ORDER_NUMBER_KEY, $arguments->getTrimmedOrderNumber())],
+            );
         }
 
-        return new ToolResult([new ContentItem($this->translator->trans(
-            'fluffydiscord_honkers.tool.get_order_status.summary',
-            [
-                '%number%' => (string) $order->getNumber(),
-                '%state%' => (string) $order->getState(),
-                '%paymentState%' => (string) $order->getPaymentState(),
-                '%shippingState%' => (string) $order->getShippingState(),
-                '%items%' => $order->getTotalQuantity(),
-                '%total%' => $this->formatTotal($order),
-                '%tracking%' => $this->formatTracking($order, $context->locale),
-            ],
-            FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
-            $context->locale,
-        ))]);
+        $trackingValues = $this->createTrackingValues($order);
+
+        return new ToolResult(
+            [new ContentItem($this->translator->trans(
+                'fluffydiscord_honkers.tool.get_order_status.summary',
+                [
+                    '%number%' => $this->formatSlot(self::ORDER_NUMBER_KEY),
+                    '%state%' => (string) $order->getState(),
+                    '%paymentState%' => (string) $order->getPaymentState(),
+                    '%shippingState%' => (string) $order->getShippingState(),
+                    '%items%' => $order->getTotalQuantity(),
+                    '%total%' => $this->formatTotal($order),
+                    '%tracking%' => $this->formatTracking($trackingValues, $context->locale),
+                ],
+                FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
+                $context->locale,
+            ))],
+            privateValues: [new PrivateValue(self::ORDER_NUMBER_KEY, (string) $order->getNumber()), ...$trackingValues],
+        );
     }
 
     private function findOrder(OrderStatusArguments $arguments): ?OrderInterface
@@ -137,28 +152,56 @@ class GetOrderStatusTool implements ChatbotToolInterface
         );
     }
 
-    private function formatTracking(OrderInterface $order, string $locale): string
+    /**
+     * @return list<PrivateValue>
+     */
+    private function createTrackingValues(OrderInterface $order): array
     {
-        $trackingCodes = [];
+        $trackingValues = [];
         foreach ($order->getShipments() as $shipment) {
             if (!$shipment instanceof ShipmentInterface) {
                 continue;
             }
             $trackingCode = $shipment->getTracking();
             if ($trackingCode !== null && $trackingCode !== '') {
-                $trackingCodes[] = $trackingCode;
+                $trackingValues[] = new PrivateValue($this->createTrackingKey(count($trackingValues)), $trackingCode);
             }
         }
 
-        if ($trackingCodes === []) {
+        return $trackingValues;
+    }
+
+    private function createTrackingKey(int $precedingCodes): string
+    {
+        return $precedingCodes === 0
+            ? self::TRACKING_CODE_KEY
+            : sprintf('%s_%d', self::TRACKING_CODE_KEY, $precedingCodes + 1);
+    }
+
+    /**
+     * @param list<PrivateValue> $trackingValues
+     */
+    private function formatTracking(array $trackingValues, string $locale): string
+    {
+        if ($trackingValues === []) {
             return '';
         }
 
+        $trackingSlots = array_map(
+            fn (PrivateValue $trackingValue): string => $this->formatSlot($trackingValue->key),
+            $trackingValues,
+        );
+
         return $this->translator->trans(
             'fluffydiscord_honkers.tool.get_order_status.tracking',
-            ['%codes%' => implode(', ', $trackingCodes)],
+            ['%codes%' => implode(', ', $trackingSlots)],
             FluffyDiscordHonkersBundle::TRANSLATION_DOMAIN,
             $locale,
         );
+    }
+
+    private function formatSlot(string $key): string
+    {
+        return sprintf('{{%s}}', $key);
     }
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.2.0
+
+### Changed
+
+- `get_order_status` sends the order number and tracking codes as private values. A model hosted outside the EU reads
+  placeholders; the customer sees the real values. It sends no new customer data.
+- Requires `fluffydiscord/honkers-sdk` 2.1. Update the chatbot backend first: an older one sends the slots to the model
+  as plain text.
+
 ## v2.1.1
 
 ### Added

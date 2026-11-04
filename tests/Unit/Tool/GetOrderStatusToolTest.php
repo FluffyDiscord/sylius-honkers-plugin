@@ -6,6 +6,7 @@ namespace FluffyDiscord\SyliusHonkersPlugin\Tests\Unit\Tool;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use FluffyDiscord\Honkers\DTO\ToolCallContext;
+use FluffyDiscord\Honkers\DTO\ToolResult;
 use FluffyDiscord\SyliusHonkersPlugin\Tool\DTO\OrderStatusArguments;
 use FluffyDiscord\SyliusHonkersPlugin\Tool\GetOrderStatusTool;
 use PHPUnit\Framework\TestCase;
@@ -39,6 +40,7 @@ class GetOrderStatusToolTest extends TestCase
 
         $shipment = $this->createStub(ShipmentInterface::class);
         $shipment->method('getTracking')->willReturn('TRACK123');
+        $shipments = [$shipment];
 
         $order = $this->createStub(OrderInterface::class);
         $order->method('getState')->willReturn($state);
@@ -49,7 +51,7 @@ class GetOrderStatusToolTest extends TestCase
         $order->method('getTotalQuantity')->willReturn(3);
         $order->method('getTotal')->willReturn(123456);
         $order->method('getCurrencyCode')->willReturn('CZK');
-        $order->method('getShipments')->willReturn(new ArrayCollection([$shipment]));
+        $order->method('getShipments')->willReturn(new ArrayCollection($shipments));
 
         return $order;
     }
@@ -57,6 +59,19 @@ class GetOrderStatusToolTest extends TestCase
     private function createContext(): ToolCallContext
     {
         return new ToolCallContext('0b9cdd42-4b1f-4f1f-9a55-111111111111', 'cs_CZ');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function readPrivateValues(ToolResult $result): array
+    {
+        $privateValues = [];
+        foreach ($result->privateValues as $privateValue) {
+            $privateValues[$privateValue->key] = $privateValue->value;
+        }
+
+        return $privateValues;
     }
 
     public function testMatchingEmailReturnsSummary(): void
@@ -73,7 +88,14 @@ class GetOrderStatusToolTest extends TestCase
         self::assertStringContainsString('get_order_status.summary', $text);
         self::assertStringContainsString('paid', $text);
         self::assertStringContainsString('shipped', $text);
-        self::assertStringContainsString('TRACK123', $text);
+        self::assertStringContainsString('{{customer_order_number}}', $text);
+        self::assertStringContainsString('{{tracking_code}}', $text);
+        self::assertStringNotContainsString('TRACK123', $text);
+        self::assertStringNotContainsString('000000042', $text);
+        self::assertSame(
+            ['customer_order_number' => '000000042', 'tracking_code' => 'TRACK123'],
+            $this->readPrivateValues($result),
+        );
         self::assertSame([], $result->blocks);
     }
 
@@ -124,7 +146,11 @@ class GetOrderStatusToolTest extends TestCase
         );
 
         self::assertFalse($result->isError);
-        self::assertStringContainsString('get_order_status.not_found', $result->content[0]->text);
+        $text = $result->content[0]->text;
+        self::assertStringContainsString('get_order_status.not_found', $text);
+        self::assertStringContainsString('{{customer_order_number}}', $text);
+        self::assertStringNotContainsString('000000042', $text);
+        self::assertSame(['customer_order_number' => '000000042'], $this->readPrivateValues($result));
     }
 
     public function testCartOrderIsReportedAsNotFound(): void
